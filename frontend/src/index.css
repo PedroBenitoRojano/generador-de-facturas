@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --font-outfit: "Outfit", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --color-brand-red: #e11d48;
+  --color-brand-red-light: #fff1f2;
+}
+
+:root {
+  --bg-main: #ffffff;
+  --bg-sidebar: #f9fafb;
+  --bg-card: #ffffff;
+  --border-main: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --accent: #e11d48;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+/* Redesigned Utilities */
+.card-minimal {
+  background: white;
+  border: 1px solid var(--border-main);
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-minimal:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.05);
+}
+
+.btn-primary {
+  @apply bg-brand-red text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:bg-red-700 active:scale-[0.98] flex items-center justify-center gap-2;
+}
+
+.btn-secondary {
+  @apply bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold border border-gray-200 transition-all duration-200 hover:bg-gray-50 active:scale-[0.98] flex items-center justify-center gap-2;
+}
+
+.input-field {
+  @apply w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-400 transition-all;
+}
+
+/* Layout Engine */
+.main-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  background: white;
+}
+
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.content-area {
+  padding: 4rem 3rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* Global Fixes */
+p,
+span {
+  line-height: 1.6;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

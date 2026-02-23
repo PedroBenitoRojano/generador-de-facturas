@@ -100,6 +100,27 @@ export function useInvoiceData() {
         persist(newData)
     }
 
+    const updateNextInvoiceNumber = (num) => {
+        const newData = {
+            ...data,
+            issuer: {
+                ...data.issuer,
+                nextInvoiceNumber: parseInt(num) + 1
+            }
+        }
+        setData(newData)
+        persist(newData)
+    }
+
+    const addInvoice = (invoice) => {
+        const newData = {
+            ...data,
+            invoices: [...(data.invoices || []), { ...invoice, id: invoice.id || crypto.randomUUID() }]
+        }
+        setData(newData)
+        persist(newData)
+    }
+
     return {
         data,
         loading,
@@ -108,6 +129,8 @@ export function useInvoiceData() {
         toggleRecipientFavorite,
         addTemplate,
         addAccount,
-        deleteAccount
+        addInvoice,
+        deleteAccount,
+        updateNextInvoiceNumber
     }
 }
