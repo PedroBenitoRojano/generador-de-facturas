@@ -17,13 +17,15 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ensure data directory exists for Railway Volume
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir);
+// Database configuration based on environment variable (for Railway Volumes)
+const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'database.sqlite');
+const dbDir = path.dirname(dbPath);
+
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const db = new Database(path.join(dataDir, 'database.sqlite'));
+const db = new Database(dbPath);
 
 // Initialize Database
 db.exec(`
