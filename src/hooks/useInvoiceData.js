@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore'
-import { db } from '../lib/firebase'
+import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { INITIAL_DATA } from '../data/initialData'
 
@@ -9,7 +8,7 @@ export function useInvoiceData() {
     const [data, setData] = useState(INITIAL_DATA)
     const [loading, setLoading] = useState(true)
 
-    // Sync with Firestore
+    // Sync with Local Backend
     useEffect(() => {
         if (!user) {
             setData(INITIAL_DATA)
@@ -17,35 +16,31 @@ export function useInvoiceData() {
             return
         }
 
-        const userDocRef = doc(db, 'users', user.uid)
-
-        // Listen for real-time updates
-        const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-            if (docSnap.exists()) {
-                setData(docSnap.data())
+        const fetchData = async () => {
+            const remoteData = await api.get('/api/data');
+            if (remoteData) {
+                setData(remoteData);
             } else {
-                // Seed strictly for the owner email
+                // If new user, seed with initial data (only for owner)
                 const isOwner = user.email === 'pedroantoniobenito@gmail.com'
                 const seedData = isOwner ? INITIAL_DATA : {
                     ...INITIAL_DATA,
                     recipients: [],
                     templates: [],
-                    issuer: { ...INITIAL_DATA.issuer, accounts: [], name: user.displayName || 'New User', email: user.email }
+                    issuer: { ...INITIAL_DATA.issuer, accounts: [], name: user.display_name || 'New User', email: user.email }
                 }
-                setDoc(userDocRef, seedData)
-                setData(seedData)
+                await api.post('/api/data', seedData);
+                setData(seedData);
             }
-            setLoading(false)
-        })
+            setLoading(false);
+        };
 
-        return () => unsubscribe()
+        fetchData();
     }, [user])
 
-    // Helper to persist changes to Firestore
     const persist = async (newData) => {
         if (!user) return
-        const userDocRef = doc(db, 'users', user.uid)
-        await setDoc(userDocRef, newData)
+        await api.post('/api/data', newData);
     }
 
     const updateIssuer = (issuer) => {
@@ -67,6 +62,15 @@ export function useInvoiceData() {
         const newData = {
             ...data,
             recipients: data.recipients.map(r => r.id === id ? { ...r, isFavorite: !r.isFavorite } : r)
+        }
+        setData(newData)
+        persist(newData)
+    }
+
+    const addTemplate = (template) => {
+        const newData = {
+            ...data,
+            templates: [...data.templates, { ...template, id: crypto.randomUUID() }]
         }
         setData(newData)
         persist(newData)
@@ -96,21 +100,14 @@ export function useInvoiceData() {
         persist(newData)
     }
 
-    const addTemplate = (template) => {
-        const newData = {
-            ...data,
-            templates: [...data.templates, { ...template, id: crypto.randomUUID() }]
-        }
-        setData(newData)
-        persist(newData)
-    }
-
     return {
         data,
         loading,
         updateIssuer,
         addRecipient,
         toggleRecipientFavorite,
-        addTemplate
+        addTemplate,
+        addAccount,
+        deleteAccount
     }
 }

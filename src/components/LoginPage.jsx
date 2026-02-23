@@ -10,7 +10,7 @@ export function LoginPage() {
             await loginWithGoogle();
         } catch (error) {
             console.error("Login failed", error);
-            alert("Failed to sign in with Google. Check Firebase configuration.");
+            alert("Failed to sign in with Google. Check server connection.");
         }
     };
 

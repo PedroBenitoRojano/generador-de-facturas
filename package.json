@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "nodemon server.js",
+    "fullstack": "concurrently \"npm run server\" \"npm run dev\"",
     "build": "vite build",
+    "start": "node server.js",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -13,15 +16,26 @@
   "license": "ISC",
   "dependencies": {
     "@vitejs/plugin-react": "^5.1.4",
+    "better-sqlite3": "^12.6.2",
     "clsx": "^2.1.1",
+    "cors": "^2.8.6",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "firebase": "^12.9.0",
     "framer-motion": "^12.34.3",
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.575.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwind-merge": "^3.5.0",
     "vite": "^7.3.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14"
   }
 }

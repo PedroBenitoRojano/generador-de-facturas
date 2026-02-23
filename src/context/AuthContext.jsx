@@ -1,10 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-    signInWithPopup,
-    signOut,
-    onAuthStateChanged
-} from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { api } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -12,20 +7,29 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
+    const checkUser = async () => {
+        try {
+            const data = await api.get('/auth/me');
+            setUser(data);
+        } catch (error) {
+            console.error("Auth check failed", error);
+        } finally {
             setLoading(false);
-        });
-        return () => unsubscribe();
+        }
+    };
+
+    useEffect(() => {
+        checkUser();
     }, []);
 
     const loginWithGoogle = () => {
-        return signInWithPopup(auth, googleProvider);
+        const authUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/google`;
+        window.location.href = authUrl;
     };
 
     const logout = () => {
-        return signOut(auth);
+        const logoutUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/auth/logout`;
+        window.location.href = logoutUrl;
     };
 
     return (
