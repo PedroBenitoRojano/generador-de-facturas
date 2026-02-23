@@ -17,6 +17,14 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Validate required environment variables
+const REQUIRED_VARS = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SESSION_SECRET'];
+REQUIRED_VARS.forEach(varName => {
+    if (!process.env[varName]) {
+        console.error(`CRITICAL ERROR: Missing environment variable ${varName}`);
+    }
+});
+
 // Database configuration based on environment variable (for Railway Volumes)
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'database.sqlite');
 const dbDir = path.dirname(dbPath);
@@ -43,7 +51,7 @@ db.exec(`
 `);
 
 app.use(cors({
-    origin: process.env.BASE_URL || 'http://localhost:5173',
+    origin: true, // Allow all origins in production if using session cookies
     credentials: true
 }));
 app.use(express.json());
@@ -52,18 +60,24 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Set to true if using HTTPS in production
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
 }));
+
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Trust Railway's proxy for HTTPS cookies
+}
 
 app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
+    clientID: process.env.GOOGLE_CLIENT_ID || 'placeholder',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'placeholder',
+    callbackURL: "/auth/google/callback",
+    proxy: true
 }, (accessToken, refreshToken, profile, done) => {
     const email = profile.emails[0].value;
     const upsertUser = db.prepare('INSERT INTO users (id, email, display_name, avatar_url) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET display_name=excluded.display_name, avatar_url=excluded.avatar_url');
@@ -83,7 +97,7 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'em
 app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = process.env.FRONTEND_URL || '/';
         res.redirect(frontendUrl);
     }
 );
@@ -95,8 +109,7 @@ app.get('/auth/me', (req, res) => {
 app.get('/auth/logout', (req, res, next) => {
     req.logout((err) => {
         if (err) return next(err);
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        res.redirect(frontendUrl);
+        res.redirect('/');
     });
 });
 
@@ -115,10 +128,11 @@ app.post('/api/data', (req, res) => {
 });
 
 // Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'dist')));
+const distPath = path.join(__dirname, 'dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
     app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+        res.sendFile(path.join(distPath, 'index.html'));
     });
 }
 
