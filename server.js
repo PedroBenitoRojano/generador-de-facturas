@@ -1,13 +1,17 @@
 import express from 'express';
-import session from 'express-session';
-import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import cors from 'cors';
-import Database from 'better-sqlite3';
+import { createRequire } from 'module';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+
+// Support for CJS modules in ESM
+const require = createRequire(import.meta.url);
+const session = require('express-session');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const cors = require('cors');
+const Database = require('better-sqlite3');
 
 dotenv.config();
 
@@ -17,46 +21,34 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+console.log('--- Starting InvoiceFlow Server ---');
+
 // Validate required environment variables
 const REQUIRED_VARS = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SESSION_SECRET'];
 REQUIRED_VARS.forEach(varName => {
     if (!process.env[varName]) {
-        console.error(`CRITICAL ERROR: Missing environment variable ${varName}`);
+        console.error(`⚠️ WARNING: Missing environment variable ${varName}`);
     }
 });
 
-// Database configuration based on environment variable (for Railway Volumes)
+// Database setup
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'database.sqlite');
 const dbDir = path.dirname(dbPath);
-
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-}
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 const db = new Database(dbPath);
-
-// Initialize Database
 db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    email TEXT UNIQUE,
-    display_name TEXT,
-    avatar_url TEXT
-  );
-  CREATE TABLE IF NOT EXISTS user_data (
-    user_id TEXT PRIMARY KEY,
-    data TEXT,
-    FOREIGN KEY(user_id) REFERENCES users(id)
-  );
+  CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, display_name TEXT, avatar_url TEXT);
+  CREATE TABLE IF NOT EXISTS user_data (user_id TEXT PRIMARY KEY, data TEXT, FOREIGN KEY(user_id) REFERENCES users(id));
 `);
+console.log('✅ Database initialized at', dbPath);
 
-app.use(cors({
-    origin: true, // Allow all origins in production if using session cookies
-    credentials: true
-}));
+// Middleware
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'fallback_secret',
+    secret: process.env.SESSION_SECRET || 'invoiceflow-local-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -67,15 +59,16 @@ app.use(session({
 }));
 
 if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1); // Trust Railway's proxy for HTTPS cookies
+    app.set('trust proxy', 1);
 }
 
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Passport Config
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID || 'placeholder',
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'placeholder',
+    clientID: process.env.GOOGLE_CLIENT_ID || 'missing',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'missing',
     callbackURL: "/auth/google/callback",
     proxy: true
 }, (accessToken, refreshToken, profile, done) => {
@@ -87,25 +80,26 @@ passport.use(new GoogleStrategy({
 
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser((id, done) => {
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
-    done(null, user);
+    try {
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+        done(null, user || null);
+    } catch (e) {
+        done(e, null);
+    }
 });
 
-// Auth Routes
+// Routes
+app.get('/health', (req, res) => res.send('OK'));
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 app.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
-        const frontendUrl = process.env.FRONTEND_URL || '/';
-        res.redirect(frontendUrl);
+        res.redirect(process.env.FRONTEND_URL || '/');
     }
 );
 
-app.get('/auth/me', (req, res) => {
-    res.json(req.user || null);
-});
-
+app.get('/auth/me', (req, res) => res.json(req.user || null));
 app.get('/auth/logout', (req, res, next) => {
     req.logout((err) => {
         if (err) return next(err);
@@ -113,7 +107,6 @@ app.get('/auth/logout', (req, res, next) => {
     });
 });
 
-// Data Routes
 app.get('/api/data', (req, res) => {
     if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
     const userData = db.prepare('SELECT data FROM user_data WHERE user_id = ?').get(req.user.id);
@@ -127,15 +120,14 @@ app.post('/api/data', (req, res) => {
     res.json({ success: true });
 });
 
-// Serve frontend in production
+// Static files
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(distPath, 'index.html'));
-    });
+    app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    console.log('✅ Serving frontend from /dist');
 }
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server listening on port ${PORT}`);
 });
