@@ -5,13 +5,8 @@ import { useAuth } from '../context/AuthContext';
 export function LoginPage() {
     const { loginWithGoogle } = useAuth();
 
-    const handleLogin = async () => {
-        try {
-            await loginWithGoogle();
-        } catch (error) {
-            console.error("Login failed", error);
-            alert("Failed to sign in with Google. Check server connection.");
-        }
+    const handleLogin = () => {
+        loginWithGoogle();
     };
 
     return (

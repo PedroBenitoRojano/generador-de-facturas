@@ -34,7 +34,11 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout }}>
-            {!loading && children}
+            {loading ? (
+                <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+                    <div className="text-indigo-400 animate-pulse font-outfit text-xl">Connecting to server...</div>
+                </div>
+            ) : children}
         </AuthContext.Provider>
     );
 }

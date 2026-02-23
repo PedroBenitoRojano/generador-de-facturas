@@ -124,7 +124,7 @@ app.post('/api/data', (req, res) => {
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
-    app.get('(.*)', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    app.get(/^(?!\/api|\/auth).*/, (req, res) => res.sendFile(path.join(distPath, 'index.html')));
     console.log('✅ Serving frontend from /dist');
 }
 
