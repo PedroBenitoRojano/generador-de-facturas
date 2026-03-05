@@ -1,131 +1,124 @@
 import React from 'react';
-import { Play, Star, Clock, Zap, User, ArrowRight } from 'lucide-react';
+import { Play, Star, Clock, Zap, Activity, Shield, Terminal as TerminalIcon, ArrowUpRight, Plus } from 'lucide-react';
+
+const StatusCard = ({ label, value, icon: Icon, color }) => (
+    <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-xl hover:border-zinc-700 transition-all group overflow-hidden relative">
+        <div className="flex items-center justify-between relative z-10">
+            <div>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">{label}</p>
+                <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
+            </div>
+            <div className={`p-3 rounded-lg ${color} bg-opacity-10 group-hover:scale-110 transition-transform`}>
+                <Icon size={20} className={color.replace('bg-', 'text-')} />
+            </div>
+        </div>
+        <div className="absolute -bottom-2 -right-2 opacity-5 pointer-events-none">
+            <Icon size={80} className={color.replace('bg-', 'text-')} />
+        </div>
+    </div>
+);
 
 export function Dashboard({ data, onGenerateFromTemplate }) {
-    const { templates = [], recipients = [] } = data;
+    const { templates = [], recipients = [], invoices = [] } = data;
     const favorites = recipients.filter(r => r.isFavorite);
 
     return (
-        <div className="space-y-12 pb-20">
-            {/* Quick Stats or Overview could go here if data allowed */}
+        <div className="space-y-10 animate-fade-in">
+            {/* System Status Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatusCard label="Active Clients" value={recipients.length} icon={Users} color="bg-blue-500" />
+                <StatusCard label="Saved Invoices" value={invoices.length} icon={Shield} color="bg-green-500" />
+                <StatusCard label="Templates" value={templates.length} icon={Zap} color="bg-amber-500" />
+                <StatusCard label="System Status" value="Online" icon={Activity} color="bg-red-500" />
+            </div>
 
-            {/* Recurring Section */}
-            <section>
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
-                        <Zap size={20} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                {/* Main Action Area: Recurring Tasks */}
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-6 bg-red-500 rounded-full" />
+                            <h3 className="text-xl font-bold text-white tracking-tight">Recurring Procedures</h3>
+                        </div>
                     </div>
-                    <h3 className="text-xl font-bold font-outfit text-white tracking-tight">Recurring Templates</h3>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {templates.length > 0 ? (
-                        templates.map((template, idx) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {templates.map((template, idx) => (
                             <div
                                 key={idx}
-                                className="bg-white border border-gray-200 p-8 rounded-2xl group hover:border-red-500 hover:shadow-xl hover:shadow-red-500/5 transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden h-full min-h-[160px]"
                                 onClick={() => onGenerateFromTemplate(template)}
+                                className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl group hover:bg-zinc-800/50 hover:border-red-500/50 transition-all cursor-pointer relative overflow-hidden"
                             >
-                                <div className="relative z-10 w-full">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="px-2.5 py-1 bg-gray-50 rounded-full text-[10px] uppercase font-bold tracking-[0.1em] text-gray-400 border border-gray-100">
-                                            Template
-                                        </div>
-                                        <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                                            <Play size={18} fill="currentColor" />
-                                        </div>
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-500 group-hover:text-red-500 group-hover:bg-red-500/10 transition-colors">
+                                        <TerminalIcon size={18} />
                                     </div>
-                                    <h4 className="text-xl font-bold text-gray-900 group-hover:text-red-600 transition-colors leading-tight mb-2 break-words">
-                                        {template.name}
-                                    </h4>
-                                    <p className="text-sm text-gray-500 leading-relaxed break-words">
-                                        {template.concept}
-                                    </p>
+                                    <ArrowUpRight size={16} className="text-zinc-700 group-hover:text-red-500 transition-colors" />
                                 </div>
-                                <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-6 relative z-10 pt-4 border-t border-gray-50">
-                                    <Clock size={14} className="opacity-50" />
-                                    <span>Recent Use</span>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="col-span-full py-20 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                            <p className="text-gray-400 font-medium">No templates yet. Create your first invoice!</p>
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* Recent Invoices Section */}
-            {data.invoices && data.invoices.length > 0 && (
-                <section>
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-red-500/10 rounded-lg text-red-600">
-                            <FileText size={20} />
-                        </div>
-                        <h3 className="text-xl font-bold font-outfit text-gray-900 tracking-tight">Recent Invoices</h3>
-                    </div>
-                    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden divide-y divide-gray-50">
-                        {data.invoices.slice(-3).reverse().map((inv) => (
-                            <div key={inv.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-red-50 group-hover:text-red-600 transition-colors">
-                                        <Clock size={18} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-900">{inv.number}</p>
-                                        <p className="text-[10px] text-gray-500 font-medium">{inv.date} • {recipients.find(r => r.id === inv.recipientId)?.name || 'Client'}</p>
-                                    </div>
-                                </div>
-                                <div className="text-right px-4">
-                                    <p className="text-sm font-bold text-gray-900">
-                                        {(inv.items?.reduce((acc, item) => acc + (item.price * (1 + (item.tax || 0) / 100)), 0))?.toFixed(2)}€
-                                    </p>
+                                <h4 className="text-sm font-bold text-zinc-100 mb-1 uppercase tracking-wider">{template.name}</h4>
+                                <p className="text-[11px] text-zinc-500 font-mono truncate">{template.concept}</p>
+                                <div className="mt-6 flex items-center gap-2">
+                                    <div className="px-2 py-0.5 rounded-full bg-zinc-800 text-[9px] font-bold text-zinc-400 uppercase border border-zinc-700">Ready</div>
+                                    <div className="flex-1 h-[1px] bg-zinc-800" />
+                                    <span className="text-[10px] font-mono text-zinc-600">v1.0</span>
                                 </div>
                             </div>
                         ))}
-                    </div>
-                </section>
-            )}
-
-            {/* Recipients Section */}
-            <section>
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-red-50 rounded-xl text-red-600 border border-red-100 shadow-sm">
-                            <Star size={22} fill="currentColor" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-bold font-outfit text-gray-900 tracking-tight">Recent Recipients</h3>
-                            <p className="text-xs text-gray-500 font-medium mt-1">Frequent clients</p>
-                        </div>
+                        <button
+                            className="bg-zinc-950 border border-zinc-800 border-dashed p-6 rounded-xl flex flex-col items-center justify-center gap-3 text-zinc-600 hover:text-red-500 hover:border-red-500/50 hover:bg-zinc-900/50 transition-all"
+                        >
+                            <Plus size={20} />
+                            <span className="text-[11px] font-bold uppercase tracking-widest">Add New Routine</span>
+                        </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
-                    {favorites.length > 0 ? (
-                        favorites.map((recipient) => (
-                            <div
-                                key={recipient.id}
-                                className="bg-white border border-gray-200 p-5 rounded-2xl hover:border-red-500 hover:shadow-xl hover:shadow-red-500/5 transition-all duration-300 group relative overflow-hidden flex items-center gap-4"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 font-bold text-lg group-hover:bg-red-600 group-hover:text-white transition-all duration-300 flex-shrink-0">
+                {/* Sidebar Info Area: Trusted Entities */}
+                <div className="space-y-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-[0.2em]">Trusted Entities</h3>
+                    </div>
+
+                    <div className="bg-zinc-900/30 border border-zinc-800/50 rounded-2xl p-4 divide-y divide-zinc-800/50">
+                        {favorites.map((recipient) => (
+                            <div key={recipient.id} className="py-4 first:pt-0 last:pb-0 flex items-center gap-4 group cursor-pointer">
+                                <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500 font-bold group-hover:bg-blue-500 group-hover:text-white transition-all">
                                     {recipient.name?.charAt(0)}
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                    <h4 className="text-sm font-bold text-gray-900 group-hover:text-red-600 transition-colors truncate">
-                                        {recipient.name}
-                                    </h4>
-                                    <p className="text-[10px] text-gray-400 font-mono tracking-wider uppercase mt-0.5">{recipient.taxId || recipient.cif}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold text-zinc-300 truncate">{recipient.name}</p>
+                                    <p className="text-[9px] text-zinc-600 font-mono mt-0.5 uppercase">{recipient.taxId || recipient.cif}</p>
                                 </div>
-                                <ArrowRight size={16} className="text-gray-300 opacity-0 group-hover:opacity-100 group-hover:text-red-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                                <Star size={14} fill="#3b82f6" className="text-blue-500 opacity-40" />
                             </div>
-                        ))
-                    ) : (
-                        <p className="text-gray-400 text-sm italic col-span-full py-12 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-300">Favorite recipients will appear here.</p>
-                    )}
+                        ))}
+                    </div>
+
+                    {/* Quick System Log */}
+                    <div className="bg-zinc-950 border border-zinc-800 p-5 rounded-2xl space-y-4">
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">System Log</p>
+                        <div className="space-y-2">
+                            <div className="flex items-start gap-2 text-[10px] font-mono text-zinc-600">
+                                <span className="text-green-500/50">[OK]</span>
+                                <span>Session verified as administrator.</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-[10px] font-mono text-zinc-600">
+                                <span className="text-blue-500/50">[INFO]</span>
+                                <span>Vault synced with SQLite module.</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-[10px] font-mono text-zinc-600">
+                                <span className="text-amber-500/50">[MSG]</span>
+                                <span>New template 'impact_hub' detected.</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </section>
+            </div>
         </div>
     );
 }
+
+const Users = ({ size, className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+);

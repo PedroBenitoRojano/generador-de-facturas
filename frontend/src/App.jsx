@@ -22,7 +22,7 @@ import { InvoiceList } from './components/InvoiceList'
 
 function App() {
     const { user, logout } = useAuth()
-    const [activeTab, setActiveTab] = useState('dashboard')
+    const [activeTab, setActiveTab] = useState('terminal')
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const {
         data,
@@ -92,7 +92,8 @@ function App() {
     }
 
     return (
-        <div className="main-layout">
+        <div className="main-layout bg-black text-white relative">
+            <div className="scanlines" />
             <Sidebar
                 user={user}
                 activeTab={activeTab}
@@ -104,12 +105,12 @@ function App() {
 
             <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                 {/* Mobile Header */}
-                <header className="lg:hidden bg-white border-b border-gray-100 p-4 flex items-center justify-between sticky top-0 z-40">
+                <header className="lg:hidden bg-zinc-900 border-b border-zinc-800 p-4 flex items-center justify-between sticky top-0 z-40">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
+                        <div className="w-8 h-8 bg-brand-red rounded flex items-center justify-center">
                             <FileText className="text-white" size={18} />
                         </div>
-                        <span className="font-bold text-gray-900 tracking-tight">InvoiceFlow</span>
+                        <span className="font-bold text-white tracking-tight uppercase text-xs">InvoiceFlow</span>
                     </div>
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
@@ -119,21 +120,17 @@ function App() {
                     </button>
                 </header>
 
-                <main className="flex-1 overflow-y-auto bg-white">
+                <main className="flex-1 overflow-y-auto bg-zinc-950">
                     <div className="content-area">
-                        {/* Dynamic Header */}
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-12 border-b border-gray-50">
+                        {/* Technical Header */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 pb-8 border-b border-zinc-900">
                             <div>
-                                <h2 className="text-4xl font-bold font-outfit text-gray-900 tracking-tight capitalize">
-                                    {activeTab === 'editor' ? 'New Invoice' : activeTab.replace('-', ' ')}
+                                <h2 className="text-3xl font-bold font-outfit text-white tracking-widest uppercase">
+                                    {activeTab === 'editor' ? 'DATA_ENTRY_MODE' : activeTab === 'terminal' ? 'TERMINAL_OS_v2' : activeTab.replace('-', '_').toUpperCase()}
                                 </h2>
-                                <p className="text-gray-500 font-medium mt-2 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-red-600 shadow-[0_0_8px_rgba(225,29,72,0.3)]"></span>
-                                    {activeTab === 'dashboard' && 'Your billing overview.'}
-                                    {activeTab === 'invoices' && 'Complete invoice history.'}
-                                    {activeTab === 'recipients' && 'Managed client directory.'}
-                                    {activeTab === 'accounts' && 'Receiving bank details.'}
-                                    {activeTab === 'terminal' && 'Retro console access.'}
+                                <p className="text-[10px] text-zinc-600 font-bold mt-2 flex items-center gap-2 uppercase tracking-[0.2em]">
+                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.3)]"></span>
+                                    System Active • Access Level: Admin
                                 </p>
                             </div>
 
